@@ -16,6 +16,7 @@
     "jest": true
   },
   "rules": {
+    "linebreak-style": ["warn", "windows"],
     "no-debugger": 0,
     "no-alert": 0,
     "no-await-in-loop": 0,
@@ -86,7 +87,7 @@
     ],
     "quotes": [
       2,
-      "single",
+      "double",
       {
         "avoidEscape": true,
         "allowTemplateLiterals": true
@@ -96,7 +97,7 @@
       "error",
       {
         "trailingComma": "es5",
-        "singleQuote": true,
+        "singleQuote": false,
         "printWidth": 80
       }
     ],
