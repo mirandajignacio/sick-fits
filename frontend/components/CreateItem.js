@@ -141,4 +141,4 @@ class CreateItem extends Component {
 }
 
 export default CreateItem;
-export { ALL_ITEMS_QUERY };
+export { CREATE_ITEM_MUTATION };
