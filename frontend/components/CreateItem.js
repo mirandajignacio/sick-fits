@@ -71,7 +71,7 @@ class CreateItem extends Component {
               e.preventDefault();
               const res = await createItem();
               Router.push({
-                pathname: "/id",
+                pathname: "/item",
                 query: { id: res.data.createItem.id }
               });
             }}
