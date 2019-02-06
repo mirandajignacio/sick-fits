@@ -5,6 +5,7 @@ import FormatMoney from "../lib/formatMoney";
 import Form from "./styles/Form";
 import Error from "./ErrorMessage";
 import Router from "next/router";
+import { ALL_ITEMS_QUERY } from "./Items";
 
 const CREATE_ITEM_MUTATION = gql`
   mutation CREATE_ITEM_MUTATION(

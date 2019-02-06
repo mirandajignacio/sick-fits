@@ -1,5 +1,6 @@
 import Link from "next/link";
 import styled from "styled-components";
+import User from "./User";
 
 const NavStyles = styled.ul`
   margin: 0;
@@ -66,6 +67,13 @@ const NavStyles = styled.ul`
 
 const Nav = () => (
   <NavStyles>
+    <User>
+      {({ data: { me } }) => {
+        // console.log(data);
+        if (me) return <p>User!</p>;
+        return null;
+      }}
+    </User>
     <Link href="/items">
       <a>Shop</a>
     </Link>
