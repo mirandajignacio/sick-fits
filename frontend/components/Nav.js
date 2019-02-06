@@ -1,6 +1,7 @@
 import Link from "next/link";
 import styled from "styled-components";
 import User from "./User";
+import Signout from "./Signout";
 
 const NavStyles = styled.ul`
   margin: 0;
@@ -66,30 +67,39 @@ const NavStyles = styled.ul`
 `;
 
 const Nav = () => (
-  <NavStyles>
-    <User>
-      {({ data: { me } }) => {
-        // console.log(data);
-        if (me) return <p>User!</p>;
-        return null;
-      }}
-    </User>
-    <Link href="/items">
-      <a>Shop</a>
-    </Link>
-    <Link href="/sell">
-      <a>Sell</a>
-    </Link>
-    <Link href="/signup">
-      <a>Signup</a>
-    </Link>
-    <Link href="/orders">
-      <a>Orders</a>
-    </Link>
-    <Link href="/me">
-      <a>Account</a>
-    </Link>
-  </NavStyles>
+  <User>
+    {({ data: { me } }) => (
+      // console.log(data);
+      <NavStyles>
+        <Link href="/items">
+          <a>Shop</a>
+        </Link>
+
+        {me && (
+          <>
+            <Link href="/sell">
+              <a>Sell</a>
+            </Link>
+
+            <Link href="/orders">
+              <a>Orders</a>
+            </Link>
+
+            <Link href="/me">
+              <a>Account</a>
+            </Link>
+            <Signout />
+          </>
+        )}
+
+        {!me && (
+          <Link href="/signup">
+            <a>Sign In</a>
+          </Link>
+        )}
+      </NavStyles>
+    )}
+  </User>
 );
 
 export default Nav;

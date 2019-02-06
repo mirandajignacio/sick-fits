@@ -43,13 +43,7 @@ const mutations = {
     // delete it!
     return context.db.mutation.deleteItem({ where }, info);
   },
-  // createDog(parent, args, context, info) {
-  //   global.dogs = global.dogs || [];
-  //   //create a dog!
-  //   const newDog = { name: args.name };
-  //   global.dogs.push(newDog);
-  //   return newDog;
-  // }
+
   async signup(parent, args, context, info) {
     // lowerCase their email
     args.email = args.email.toLowerCase();
@@ -75,6 +69,34 @@ const mutations = {
     });
     // finally we return the user to the browser
     return user;
+  },
+
+  async signin(parent, { email, password }, ctx, info) {
+    // check if thereis a user whit that email
+    const user = await ctx.db.query.user({ where: { email } });
+    if (!user) {
+      throw new Error(`No such user found for email$ ${email}`);
+    }
+    // check if their password is correct
+    const valid = bcrypt.compare(password, user.password);
+    if (!valid) {
+      throw new Error("Invalid Password!");
+    }
+
+    // generate the jwt
+    const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
+    // set the cookie with the token
+    ctx.response.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 365 // 1 year cookie
+    });
+    // return the user
+    return user;
+  },
+
+  signout(parent, args, ctx, info) {
+    ctx.response.clearCookie("token");
+    return { message: "GoodBye!" };
   }
 };
 
