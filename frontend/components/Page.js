@@ -27,10 +27,9 @@ const Inner = styled.div`
 injectGlobal`
   @font-face {
     font-family: 'radnika_next';
-    src: url('/static/radnikanext-medium-webfont.woff2')
-    format('woff2');
+    src: url('/static/radnikanext-medium-webfont.woff2') format('woff2');
     font-weight: normal;
-    font-style: normal
+    font-style: normal;
   }
   html {
     box-sizing: border-box;
@@ -44,12 +43,13 @@ injectGlobal`
     margin: 0;
     font-size: 1.5rem;
     line-height: 2;
-    font-family: 'radnika_next'
+    font-family: 'radnika_next';
   }
   a {
     text-decoration: none;
-    color: ${theme.black}
+    color: ${theme.black};
   }
+  button {  font-family: 'radnika_next'; }
 `;
 
 class Page extends Component {
@@ -59,10 +59,7 @@ class Page extends Component {
         <StyledPage>
           <Meta />
           <Header />
-          {this.props.children}
-          <Inner>
-            <p>Can i be the footer? :D</p>
-          </Inner>
+          <Inner>{this.props.children}</Inner>
         </StyledPage>
       </ThemeProvider>
     );
