@@ -1,14 +1,15 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { randomBytes } = require("crypto");
-const { promisify } = require("util");
-const { transport, makeANiceEmail } = require("../mail");
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { hasPermission } = require('../utils');
+const { randomBytes } = require('crypto');
+const { promisify } = require('util');
+const { transport, makeANiceEmail } = require('../mail');
 
 const mutations = {
   async createItem(parent, args, context, info) {
     //TODO: Check if they are logged in
     if (!context.request.userId) {
-      throw new Error("You must be logged in to do that!");
+      throw new Error('You must be logged in to do that!');
     }
 
     const item = await context.db.mutation.createItem(
@@ -49,9 +50,16 @@ const mutations = {
   async deleteItem(parent, args, context, info) {
     const where = { id: args.id };
     // find the item
-    const item = await context.db.query.item({ where }, `{id title}`);
+    const item = await context.db.query.item({ where }, `{id title user {id}}`);
     // check if the own that item, or have the permissions
-    //TODO
+    const ownsItem = item.user.id === context.request.userId;
+    const hasPermission = context.request.user.permissions.some(permission =>
+      ['ADMIN', 'ITEMDELETE'].includes(permission)
+    );
+
+    if (!ownsItem && !hasPermission) {
+      throw new Error('You dont have permission to do that!');
+    }
     // delete it!
     return context.db.mutation.deleteItem({ where }, info);
   },
@@ -67,7 +75,7 @@ const mutations = {
         data: {
           ...args,
           password,
-          permissions: { set: ["USER"] }
+          permissions: { set: ['USER'] }
         }
       },
       info
@@ -75,7 +83,7 @@ const mutations = {
     // create jwt token
     const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
     // we set the jwt as a cookie on the response
-    context.response.cookie("token", token, {
+    context.response.cookie('token', token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 365 // 1 year cookie
     });
@@ -91,13 +99,13 @@ const mutations = {
     const valid = await bcrypt.compare(password, user.password);
 
     if (!valid) {
-      throw new Error("Invalid Password!");
+      throw new Error('Invalid Password!');
     }
 
     // generate the jwt
     const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
     // set the cookie with the token
-    ctx.response.cookie("token", token, {
+    ctx.response.cookie('token', token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 365 // 1 year cookie
     });
@@ -106,8 +114,8 @@ const mutations = {
   },
 
   signout(parent, args, ctx, info) {
-    ctx.response.clearCookie("token");
-    return { message: "GoodBye!" };
+    ctx.response.clearCookie('token');
+    return { message: 'GoodBye!' };
   },
 
   async requestReset(parent, args, ctx, info) {
@@ -118,7 +126,7 @@ const mutations = {
     }
     // 2. Set a reset token and expiry on that user
     const randomBytesPromiseified = promisify(randomBytes);
-    const resetToken = (await randomBytesPromiseified(20)).toString("hex");
+    const resetToken = (await randomBytesPromiseified(20)).toString('hex');
     const resetTokenExpiry = Date.now() + 3600000; // 1 hour from now
     const res = await ctx.db.mutation.updateUser({
       where: { email: args.email },
@@ -126,9 +134,9 @@ const mutations = {
     });
     // 3. Email them that reset token
     const mailRes = await transport.sendMail({
-      from: "wes@wesbos.com",
+      from: 'wes@wesbos.com',
       to: user.email,
-      subject: "Your Password Reset Token",
+      subject: 'Your Password Reset Token',
       html: makeANiceEmail(`Your Password Reset Token is here!
       \n\n
       <a href="${
@@ -137,12 +145,13 @@ const mutations = {
     });
 
     // 4. Return the message
-    return { message: "Thanks!" };
+    return { message: 'Thanks!' };
   },
+
   async resetPassword(parent, args, ctx, info) {
     //check if the password match
     if (args.password !== args.confirmPassword) {
-      throw new Error("Passwords dont match");
+      throw new Error('Passwords dont match');
     }
     //check if its a legit reset token*/
 
@@ -154,7 +163,7 @@ const mutations = {
       }
     });
     if (!user) {
-      throw new Error("Invalid or expired Token");
+      throw new Error('Invalid or expired Token');
     }
     //hash ther new password
     const password = await bcrypt.hash(args.password, 10);
@@ -177,12 +186,44 @@ const mutations = {
       process.env.APP_SECRET
     );
     //set the jwt cookie
-    ctx.response.cookie("token", token, {
+    ctx.response.cookie('token', token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 365
     });
     //return new user
     return updateUser;
+  },
+
+  async updatePermissions(parent, args, ctx, info) {
+    // 1. Check if they are logged in
+    if (!ctx.request.userId) {
+      throw new Error('You must be logged in');
+    }
+    // 2. Query the current user
+    const currentUser = await ctx.db.query.user(
+      {
+        where: {
+          id: ctx.request.userId
+        }
+      },
+      info
+    );
+    // 3. Check if they have permissions to do this
+    hasPermission(currentUser, ['ADMIN', 'PERMISSIONUPDATE']);
+    // 4 Update the permissions
+    return ctx.db.mutation.updateUser(
+      {
+        data: {
+          permissions: {
+            set: args.permissions
+          }
+        },
+        where: {
+          id: args.userId
+        }
+      },
+      info
+    );
   }
 };
 
