@@ -245,7 +245,7 @@ const mutations = {
       return ctx.db.mutation.updateCartItem(
         {
           where: { id: existingCartItem.id },
-          data: { quantity: existingCartItem.quanty + 1 }
+          data: { quantity: existingCartItem.quantity + 1 }
         },
         info
       );
